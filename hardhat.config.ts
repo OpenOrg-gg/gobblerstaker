@@ -6,11 +6,16 @@ import "@openzeppelin/hardhat-upgrades";
 import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "@nomiclabs/hardhat-etherscan";
+import  "@nomicfoundation/hardhat-network-helpers";
 
 import "hardhat-docgen";
 
 import { HardhatUserConfig } from "hardhat/types";
 import * as dotenv from "dotenv";
+require('dotenv').config();
+import { config as dotenvConfig } from "dotenv";
+import { resolve } from "path";
+dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 
 dotenv.config();
@@ -36,48 +41,6 @@ const config: HardhatUserConfig = {
           : zaddr,
       ],
       minGasPrice: 32000000000,
-    },
-    ropsten: {
-      url: process.env.ROPSTEN_URL ? process.env.ROPSTEN_URL : zaddr,
-      accounts: [
-        process.env.ROPSTEN_PRIVATE_KEY
-          ? process.env.ROPSTEN_PRIVATE_KEY
-          : zaddr,
-      ],
-      chainId: 3, // Ropsten's id
-      gas: 8000000, // Ropsten has a lower block limit than mainnet
-      gasPrice: 53000000000,
-      //gasPrice: 2000000000
-    },
-    rinkeby: {
-      url: process.env.RINKEBY_URL ? process.env.RINKEBY_URL : zaddr,
-      accounts: [
-        process.env.RINKEBY_PRIVATE_KEY
-          ? process.env.RINKEBY_PRIVATE_KEY
-          : zaddr,
-      ],
-      chainId: 4, // Ropsten's id
-    },
-    polygon: {
-      url: process.env.POLYGON_URL ? process.env.POLYGON_URL : zaddr,
-      accounts: [
-        process.env.POLYGON_PRIVATE_KEY
-          ? process.env.POLYGON_PRIVATE_KEY
-          : zaddr,
-      ],
-      chainId: 137, // Polygon's id
-    },
-    localhost: {
-      url: "http://localhost:8545",
-    },
-    optimism: {
-      url: process.env.OPTIMISM_URL ? process.env.OPTIMISM_URL : zaddr,
-      accounts: [
-        process.env.OPTIMISM_PRIVATE_KEY
-          ? process.env.OPTIMISM_PRIVATE_KEY
-          : zaddr,
-      ],
-      chainId: 10, // OP's id
     },
   },
   solidity: {
@@ -120,22 +83,10 @@ const config: HardhatUserConfig = {
       //npx hardhat watch compilation -- auto compile on change
       tasks: ["compile"],
     },
-    test: {
-      //npx hardhat watch test -- run test when a file is saved
-      tasks: [
-        {
-          command: "test",
-          params: { testFiles: ["./test/presale/oversaturation/index.ts"] },
-        },
-      ], //test this file
-      files: ["./test/presale/oversaturation/*"], //test when this file is saved
-    },
   },
   paths: {
     sources: "./contracts",
     tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
   },
   mocha: {
     timeout: 20000000,

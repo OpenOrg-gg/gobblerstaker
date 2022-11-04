@@ -46,6 +46,7 @@ contract gooTogether {
     constructor(address _gooPoints){
         totalMultiple = 0;
         lastRewardBlock = block.timestamp;
+        gooPoints = _gooPoints;
     }
 
 function deposit(uint256 _id) external {

@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 interface IGooTogether{
   function calculateInterest() external;
+  function gooPoints() external view returns (address);
 }
 
 interface IGooBalanceProxy{
@@ -18,7 +19,7 @@ import "./IERC20.sol";
 /// @title gooPoints token contract
 /// @notice handles all minting/burning of gooPoints
 /// @dev extends UFragments
-contract gooPoints is Initializable, UFragments, IGooPoints {
+contract gooPoints is UFragments, IGooPoints {
   address public _reserve;
 
   /// @notice any function with this modifier will call the pay_interest() function before any function logic is called
@@ -29,7 +30,7 @@ contract gooPoints is Initializable, UFragments, IGooPoints {
 
   /// @notice initializer for contract
   /// @dev consider adding decimals?
-  function initialize(address _proxyAddress, address _gooTogether) public initializer {
+  function initialize(address _proxyAddress, address _gooTogether) public {
     __UFragments_init("gooTogetherPoints", "GOOT", _gooTogether);
     _reserve = _proxyAddress;
   }
