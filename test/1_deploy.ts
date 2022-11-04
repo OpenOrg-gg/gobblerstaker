@@ -28,41 +28,38 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 require("chai").should();
 describe("Deploy Contracts", function (){
  
-async function deploy(){
+async function deployGooFixture(){
   const GooPoints = await ethers.getContractFactory("gooPoints");
   const [owner, addr1, addr2] = await ethers.getSigners();
   const GooPointsLive = await GooPoints.deploy();
   await GooPointsLive.deployed();
 
   const GooTogether = await ethers.getContractFactory("gooTogether");
-  const GooTogetherLive = await GooPoints.deploy();
+  const GooTogetherLive = await GooTogether.deploy(GooPointsLive.address);
   await GooTogetherLive.deployed();
   
   await mineBlock();
 
   const GooBalanceProxy = await ethers.getContractFactory("gooBalanceProxy");
-  const GooBalanceProxyLive = await GooPoints.deploy();
+  const GooBalanceProxyLive = await GooBalanceProxy.deploy();
   await GooBalanceProxyLive.deployed();
 
   await expect(GooPointsLive.initialize(GooBalanceProxyLive.address, GooTogetherLive.address))
  
   return {GooBalanceProxyLive, GooPointsLive, GooTogetherLive}
-}});
-
-describe("test contracts", function ()  {
-    
-    it("Verify deployment of gooPoints deploy", async function () {
-        const {GooBalanceProxyLive, GooPointsLive, GooTogetherLive} = await loadFixture(deploy)
+}
+  
+it("Verify deployment of gooPoints deploy", async function () {
+        const { GooPointsLive, GooTogetherLive, GooBalanceProxy} = await loadFixture(deployGooFixture);
         expect(await GooPointsLive.name()).to.equal("gooTogetherPoints");
       });
       it("Verify deployment of gooTogether proxy", async function () {
-        const reserveAddress = await GooTogetherLive.gooPoints();
-        await mineBlock();
-        const expectedReserveAddress = GooPointsLive.address;
-        assert.equal(reserveAddress, expectedReserveAddress, "gooTogether correctly deployed");
+        const { GooPointsLive, GooTogetherLive, GooBalanceProxy} = await loadFixture(deployGooFixture);
+        expect(await GooTogetherLive.gooPoints()).to.equal(GooPointsLive.address);
       });
       describe("Sanity check gooPoints deploy", function () {
         it("Should return the right name, symbol, and decimals", async () => {
+          const { GooPointsLive, GooTogetherLive, GooBalanceProxy} = await loadFixture(deployGooFixture);
           expect(await GooPointsLive.name()).to.equal("gooTogetherPoints");
           expect(await GooPointsLive.symbol()).to.equal("GOOT");
           expect(await GooPointsLive.decimals()).to.equal(18);
@@ -70,4 +67,3 @@ describe("test contracts", function ()  {
     
       });
     })
-

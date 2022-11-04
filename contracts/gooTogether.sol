@@ -37,16 +37,16 @@ contract gooTogether {
 
     address immutable gobblers = address(0x60bb1e2AA1c9ACAfB4d34F71585D7e959f387769);
     address immutable gobblerUnion = address(0x6761A059Eb3881627ad33553DbeF81a2ba576DBf);
-    address public gooPoints;
+    address public _gooPoints;
     address immutable gooAddress = address(0x600000000a36F3cD48407e35eB7C5c910dc1f7a8);
 
     uint256 totalMultiple;
     uint256 lastRewardBlock;
 
-    constructor(address _gooPoints){
+    constructor(address _setGooPoints){
         totalMultiple = 0;
         lastRewardBlock = block.timestamp;
-        gooPoints = _gooPoints;
+        _gooPoints = _setGooPoints;
     }
 
 function deposit(uint256 _id) external {
@@ -55,7 +55,7 @@ function deposit(uint256 _id) external {
     uint256 multiRate = IGobblers(gobblers).getGobblerEmissionMultiple(_id);
     getUserData[msg.sender][_id] = true;
     totalMultiple += multiRate;
-    IGooPoints(gooPoints).mint(multiRate, msg.sender);
+    IGooPoints(_gooPoints).mint(multiRate, msg.sender);
 }
 
 function withdraw(uint256 _id) external {
@@ -63,9 +63,9 @@ function withdraw(uint256 _id) external {
     pay_interest();
     uint256 multiRate = IGobblers(gobblers).getGobblerEmissionMultiple(_id);
     IERC721(gobblers).safeTransferFrom(address(this), msg.sender, _id);
-    IGooPoints(gooPoints).burn(multiRate, msg.sender);
+    IGooPoints(_gooPoints).burn(multiRate, msg.sender);
     
-    uint256 awardRate = multiRate * IGooPoints(gooPoints).reserveRatio();
+    uint256 awardRate = multiRate * IGooPoints(_gooPoints).reserveRatio();
 
     //2% fee all stakers share
     IGobblers(gobblers).removeGoo((awardRate * 98) / 100);
@@ -79,7 +79,7 @@ function withdraw(uint256 _id) external {
 
 
 function userTotalGooEstimated(address _user) public view returns(uint256) {
-    return IGooPoints(gooPoints).balanceOf(_user);
+    return IGooPoints(_gooPoints).balanceOf(_user);
 }
 
 function totalGooInContract() external view returns(uint256){
@@ -112,8 +112,12 @@ function poolMulitple() external view returns(uint256){
     
     uint256 adjustment = newGoo / totalMultiple;
 
-    IGooPoints(gooPoints).donate(adjustment);
+    IGooPoints(_gooPoints).donate(adjustment);
 
     return adjustment;
+  }
+
+  function gooPoints() external view returns (address){
+    return _gooPoints;
   }
 }
