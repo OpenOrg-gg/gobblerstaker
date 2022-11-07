@@ -21,6 +21,8 @@ interface IERC20 {
 
     event Donation(address indexed from, uint256 value, uint256 totalSupply);
 
+    event Loss(address indexed from, uint256 value, uint256 totalySupply);
+
     /**
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.

@@ -1,0 +1,399 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "deposit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "gooPoints",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pay_interest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "viewGobblers",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "deposit(uint256)": "b6b55f25",
+    "gooPoints()": "588c4f9a",
+    "pay_interest()": "ae4b5ae4",
+    "viewGobblers()": "28928c72"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"deposit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gooPoints\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pay_interest\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"viewGobblers\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/contracts/IGooTogether.sol\":\"IGooTogether\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@ensdomains/=node_modules/@ensdomains/\",\":@openzeppelin/=node_modules/@openzeppelin/\",\":@uniswap/=node_modules/@uniswap/\",\":@yearnvaults/=node_modules/@yearnvaults/\",\":base64-sol/=node_modules/base64-sol/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":eth-gas-reporter/=node_modules/eth-gas-reporter/\",\":forge-std/=lib/forge-std/src/\",\":hardhat-console/=node_modules/hardhat-console/\",\":hardhat/=node_modules/hardhat/\"]},\"sources\":{\"src/contracts/IGooTogether.sol\":{\"keccak256\":\"0x97bf1482a6deaa36804eb8f75e4282dfcd0451906591b0c3db07f0f3a90982e8\",\"urls\":[\"bzz-raw://c6fc7cbffea68f934ce96174f4e9fa289b8c0c85a6707f1eb6a2dbd2b0b81159\",\"dweb:/ipfs/QmVJRD9dzn7WeFDagysoR4cvVQFpjKbERmUxyYRPiYqQtT\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.17+commit.8df45f5f"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "deposit"
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "gooPoints",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "pay_interest"
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "viewGobblers",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":@ensdomains/=node_modules/@ensdomains/",
+        ":@openzeppelin/=node_modules/@openzeppelin/",
+        ":@uniswap/=node_modules/@uniswap/",
+        ":@yearnvaults/=node_modules/@yearnvaults/",
+        ":base64-sol/=node_modules/base64-sol/",
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":eth-gas-reporter/=node_modules/eth-gas-reporter/",
+        ":forge-std/=lib/forge-std/src/",
+        ":hardhat-console/=node_modules/hardhat-console/",
+        ":hardhat/=node_modules/hardhat/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/contracts/IGooTogether.sol": "IGooTogether"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "src/contracts/IGooTogether.sol": {
+        "keccak256": "0x97bf1482a6deaa36804eb8f75e4282dfcd0451906591b0c3db07f0f3a90982e8",
+        "urls": [
+          "bzz-raw://c6fc7cbffea68f934ce96174f4e9fa289b8c0c85a6707f1eb6a2dbd2b0b81159",
+          "dweb:/ipfs/QmVJRD9dzn7WeFDagysoR4cvVQFpjKbERmUxyYRPiYqQtT"
+        ],
+        "license": null
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/contracts/IGooTogether.sol",
+    "id": 24897,
+    "exportedSymbols": {
+      "IGooTogether": [
+        24896
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "2:219:21",
+    "nodes": [
+      {
+        "id": 24896,
+        "nodeType": "ContractDefinition",
+        "src": "2:219:21",
+        "nodes": [
+          {
+            "id": 24880,
+            "nodeType": "FunctionDefinition",
+            "src": "29:33:21",
+            "nodes": [],
+            "functionSelector": "ae4b5ae4",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "pay_interest",
+            "nameLocation": "38:12:21",
+            "parameters": {
+              "id": 24878,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "50:2:21"
+            },
+            "returnParameters": {
+              "id": 24879,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "61:0:21"
+            },
+            "scope": 24896,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 24885,
+            "nodeType": "FunctionDefinition",
+            "src": "66:53:21",
+            "nodes": [],
+            "functionSelector": "588c4f9a",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "gooPoints",
+            "nameLocation": "75:9:21",
+            "parameters": {
+              "id": 24881,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "84:2:21"
+            },
+            "returnParameters": {
+              "id": 24884,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 24883,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 24885,
+                  "src": "110:7:21",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 24882,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "110:7:21",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "109:9:21"
+            },
+            "scope": 24896,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 24890,
+            "nodeType": "FunctionDefinition",
+            "src": "123:35:21",
+            "nodes": [],
+            "functionSelector": "b6b55f25",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "deposit",
+            "nameLocation": "132:7:21",
+            "parameters": {
+              "id": 24888,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 24887,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 24890,
+                  "src": "140:7:21",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 24886,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "140:7:21",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "139:9:21"
+            },
+            "returnParameters": {
+              "id": 24889,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "157:0:21"
+            },
+            "scope": 24896,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 24895,
+            "nodeType": "FunctionDefinition",
+            "src": "162:56:21",
+            "nodes": [],
+            "functionSelector": "28928c72",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "viewGobblers",
+            "nameLocation": "171:12:21",
+            "parameters": {
+              "id": 24891,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "183:2:21"
+            },
+            "returnParameters": {
+              "id": 24894,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 24893,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 24895,
+                  "src": "209:7:21",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 24892,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "209:7:21",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "208:9:21"
+            },
+            "scope": 24896,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IGooTogether",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          24896
+        ],
+        "name": "IGooTogether",
+        "nameLocation": "12:12:21",
+        "scope": 24897,
+        "usedErrors": []
+      }
+    ]
+  },
+  "id": 21
+}

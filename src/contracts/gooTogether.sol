@@ -1,27 +1,33 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.17;
 
-interface IGobblers{
-    function getGobblerEmissionMultiple(uint256) external view returns (uint256);
-    function getUserEmissionMultiple(address) external view returns (uint256);
-    function getUserData(address) external view returns (uint32, uint32, uint128, uint64);
-    function addGoo(uint256) external;
-    function removeGoo(uint256) external;
-    function gooBalance(address) external view returns (uint256);
-}
+import "./IGobblers.sol";
 
-interface IGooPoints{
-    function mint(uint256, address) external;
-    function burn(uint256, address) external;
-    function reserveRatio() external view returns(uint256);
-    function balanceOf(address) external view returns (uint256);
-    function donate(uint256) external;
-}
-
+import "./IGooPoints.sol";
 import "./IERC721.sol";
 
 import "./IERC20.sol";
 import "./IERC20Full.sol";
+import "./IUFragments.sol";
+
+interface IERC721Receiver {
+    /**
+     * @dev Whenever an {IERC721} `tokenId` token is transferred to this contract via {IERC721-safeTransferFrom}
+     * by `operator` from `from`, this function is called.
+     *
+     * It must return its Solidity selector to confirm the token transfer.
+     * If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+     *
+     * The selector can be obtained in Solidity with `IERC721Receiver.onERC721Received.selector`.
+     */
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4);
+}
+
 
 contract gooTogether {
 
@@ -34,6 +40,8 @@ contract gooTogether {
     //goes to the gobblers union.
 
     mapping(address => mapping(uint256 => bool)) public getUserData;
+    
+    mapping(address => uint256[]) public userGobblers;
 
     address immutable gobblers = address(0x60bb1e2AA1c9ACAfB4d34F71585D7e959f387769);
     address immutable gobblerUnion = address(0x6761A059Eb3881627ad33553DbeF81a2ba576DBf);
@@ -54,18 +62,31 @@ function deposit(uint256 _id) external {
     IERC721(gobblers).safeTransferFrom(msg.sender, address(this), _id);
     uint256 multiRate = IGobblers(gobblers).getGobblerEmissionMultiple(_id);
     getUserData[msg.sender][_id] = true;
+    userGobblers[msg.sender].push(_id);
     totalMultiple += multiRate;
-    IGooPoints(_gooPoints).mint(multiRate, msg.sender);
+    IGooPoints(_gooPoints).mint(multiRate , msg.sender);
+    //we sandwich the pay interest on both deposit and withdraw so we always have the latest total multiple and time stamp
+    //this prevents any exploits in rounding on rapid withdraw/deposit.
+    pay_interest();
 }
 
-function withdraw(uint256 _id) external {
-    require(getUserData[msg.sender][_id] == true);
-    pay_interest();
-    uint256 multiRate = IGobblers(gobblers).getGobblerEmissionMultiple(_id);
-    IERC721(gobblers).safeTransferFrom(address(this), msg.sender, _id);
-    IGooPoints(_gooPoints).burn(multiRate, msg.sender);
+function withdraw() external {
     
-    uint256 awardRate = multiRate * IGooPoints(_gooPoints).reserveRatio();
+    pay_interest();
+    uint256 len = userGobblers[msg.sender].length;
+    uint256 userMulti;
+    for(uint i=len; i > len; i--){
+            uint256 multiRate = IGobblers(gobblers).getGobblerEmissionMultiple(i);
+            userMulti += multiRate;
+            IERC721(gobblers).safeTransferFrom(address(this), msg.sender, i);
+            totalMultiple -= multiRate;
+            userGobblers[msg.sender].pop();
+            getUserData[msg.sender][i] = false;
+    }
+    uint256 userBalance = IERC20Full(_gooPoints).balanceOf(msg.sender);
+    IGooPoints(_gooPoints).burn(userMulti, msg.sender);
+
+    uint256 awardRate = userBalance * (IUFragments(_gooPoints).gooSharePerFragment());
 
     //2% fee all stakers share
     IGobblers(gobblers).removeGoo((awardRate * 98) / 100);
@@ -73,13 +94,15 @@ function withdraw(uint256 _id) external {
     //2% fee to union
     IERC20Full(gooAddress).transfer(gobblerUnion, ((awardRate * 2) / 100));
     IERC20Full(gooAddress).transfer(msg.sender, ((awardRate * 96) / 100));
-    getUserData[msg.sender][_id] = false;
+
+    IGooPoints(_gooPoints).loss(awardRate);
+
     pay_interest();
 }
 
 
 function userTotalGooEstimated(address _user) public view returns(uint256) {
-    return IGooPoints(_gooPoints).balanceOf(_user);
+    return IERC20Full(_gooPoints).balanceOf(_user);
 }
 
 function totalGooInContract() external view returns(uint256){
@@ -94,10 +117,10 @@ function poolMulitple() external view returns(uint256){
   /// @notice accrue interest to borrowers and distribute it to USDa holders.
   /// this function is called before any function that changes the reserve ratio
   function pay_interest() public returns (uint256) {
-
-    (,uint256 emissionsMulitple, uint256 lastBalance, uint256 lastTimestamp) = IGobblers(gobblers).getUserData(address(this));   
+    uint256 adjustment;
+    (,uint256 emissionsMultiple, uint256 lastBalance, uint256 lastTimestamp) = IGobblers(gobblers).getUserData(address(this));   
     IGobblers(gobblers).removeGoo(0);
-    (,uint256 newMulitple, uint256 newBalance, uint256 newTimestamp) = IGobblers(gobblers).getUserData(address(this));   
+    (,uint256 newMultiple, uint256 newBalance, uint256 newTimestamp) = IGobblers(gobblers).getUserData(address(this));   
     
     // calculate the time difference between the current block and the last time the block was called
     uint256 timeDifference = newTimestamp - lastTimestamp;
@@ -105,19 +128,54 @@ function poolMulitple() external view returns(uint256){
     // if the time difference is 0, there is no interest. this saves gas in the case that
     // if multiple users call interest paying functions in the same block
     if (timeDifference == 0) {
-      return 0;
+      adjustment = 0;
+      return adjustment;
     }
 
-    uint256 newGoo = newBalance - lastBalance;
+
+    //We increase the ratio by the multiple, times the number of seconds passed / 5, to roughly align with block times.
+    uint256 gonAdjust = ((totalMultiple) * ((timeDifference) / 5));
+    uint256 fragmentAdjust;
+
+    ///MAYBE NEED TO SWITCH GON FOR FRAGMENTS? FRAGMENTS GOING DOWN OVER TIME SHOULD BE GOING UP.
+    if(emissionsMultiple > newMultiple){
+        fragmentAdjust = emissionsMultiple - newMultiple;
+        IUFragments(_gooPoints).rebase(0,fragmentAdjust*10e18);
+    }
+
+    if(emissionsMultiple < newMultiple){
+        fragmentAdjust = newMultiple - emissionsMultiple;
+        IUFragments(_gooPoints).rebase(fragmentAdjust*10e18,0);
+    }
+
+    IUFragments(_gooPoints).rebaseGons(gonAdjust, 0);
     
-    uint256 adjustment = newGoo / totalMultiple;
+    //if(newBalance > lastBalance){
+       // IGooPoints(_gooPoints).donate(adjustment);
+   // }
 
-    IGooPoints(_gooPoints).donate(adjustment);
+   // if(lastBalance > newBalance){
+       // adjustment = lastBalance - newBalance;
+        //IGooPoints(_gooPoints).loss(adjustment);
+   // }
+    
+    //if(lastBalance == newBalance){
+        //adjustment = 0;
+    //}
 
-    return adjustment;
+
+    return gonAdjust;
   }
 
   function gooPoints() external view returns (address){
     return _gooPoints;
+  }
+
+  function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+    return IERC721Receiver.onERC721Received.selector;
+  }
+
+  function viewGobblers() external view returns (address){
+    return gobblers;
   }
 }

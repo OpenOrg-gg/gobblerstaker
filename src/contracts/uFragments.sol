@@ -6,17 +6,18 @@ import "./ERC20Detailed.sol";
 
 import "./Initializable.sol";
 
+import "./IGooPoints.sol";
+
+import "./IGobblers.sol";
+
 /**
  * @title uFragments ERC20 token
- * @dev USDL uses the uFragments concept from the Ideal Money project to play interest
- *      Implementation is shamelessly borrowed from Ampleforth project
- *      uFragments is a normal ERC20 token, but its supply can be adjusted by splitting and
- *      combining tokens proportionally across all wallets.
- *
- *
- *      uFragment balances are internally represented with a hidden denomination, 'gons'.
- *      We support splitting the currency in expansion and combining the currency on contraction by
- *      changing the exchange rate between the hidden 'gons' and the public 'fragments'.
+ * @dev GooPoints uses the Ampleforth UFragments model to track value.
+ * Users are assigned `fragments` on the basis of an internal balance called `gons`
+ * Initial Fragments start at a specific ratio based on the multiplier of the Gobbler Mulitpliers a user deposits
+ * Each time a deposit, withdraw, or update command is issued, the Fragments rebase to account for the number of seconds.
+ * This means that users accrue value based on time in the pool.
+ * An additional internal balance looks at how much Goo is in the pool.
  */
 contract UFragments is Initializable, ERC20Detailed {
   // PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH
@@ -41,14 +42,6 @@ contract UFragments is Initializable, ERC20Detailed {
   event LogMonetaryPolicyUpdated(address monetaryPolicy);
   event feePaid(address from, uint256 amount);
 
-  // Used for authentication
-  address public monetaryPolicy;
-
-  modifier onlyMonetaryPolicy() {
-    require(msg.sender == monetaryPolicy);
-    _;
-  }
-
   modifier validRecipient(address to) {
     require(to != address(0x0));
     require(to != address(this));
@@ -57,7 +50,7 @@ contract UFragments is Initializable, ERC20Detailed {
 
   uint256 private constant DECIMALS = 18;
   uint256 private constant MAX_UINT256 = 2**256 - 1;
-  uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 1 * 10**DECIMALS;
+  uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 1e18;
 
   // _totalGons is a multiple of INITIAL_FRAGMENTS_SUPPLY so that _gonsPerFragment is an integer.
   // Use the highest value that fits in a uint256 for max granularity.
@@ -71,6 +64,9 @@ contract UFragments is Initializable, ERC20Detailed {
   address public gobblerUnion;
   address public gobblers;
   address public gooTogether;
+  uint256 public epoch;
+  uint256 public startTime;
+  uint256 public internalGooBalance;
   mapping(address => uint256) public _gonBalances;
 
   // This is denominated in Fragments, because the gons-fragments conversion might change before
@@ -92,8 +88,8 @@ contract UFragments is Initializable, ERC20Detailed {
     __ERC20Detailed_init(name, symbol, uint8(DECIMALS));
 
     //set og initial values
-    _totalGons = INITIAL_FRAGMENTS_SUPPLY * 10**48;
-    MAX_SUPPLY = 2**128 - 1;
+    _totalGons = 2e18;
+    MAX_SUPPLY = MAX_UINT256;
 
     _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
     _gonBalances[address(0x0)] = _totalGons; //send starting supply to a burner address so _totalSupply is never 0
@@ -113,11 +109,11 @@ contract UFragments is Initializable, ERC20Detailed {
    * @return The total number of fragments after the supply adjustment.
    */
   function rebase(
-    uint256 epoch,
     uint256 supplyAdd,
     uint256 supplyRemove
   ) external returns (uint256) {
-    require(msg.sender == gooTogether);  
+    require(msg.sender == gooTogether); 
+    epoch += 1; 
     if (supplyAdd == 0 && supplyRemove == 0) {
       emit LogRebase(epoch, _totalSupply);
       return _totalSupply;
@@ -150,6 +146,45 @@ contract UFragments is Initializable, ERC20Detailed {
     return _totalSupply;
   }
 
+    /**
+   * @dev Notifies Fragments contract about a new rebase cycle.
+   * @param supplyAdd The number of new fragment tokens to add into circulation via expansion.
+   * @param supplyRemove The number of new fragment tokens to remove into circulation via expansion.
+   * @return The total number of fragments after the supply adjustment.
+   */
+  function rebaseGons(
+    uint256 supplyAdd,
+    uint256 supplyRemove
+  ) external returns (uint256) {
+    require(msg.sender == gooTogether); 
+    epoch += 1; 
+    if (supplyAdd == 0 && supplyRemove == 0) {
+      emit LogRebase(epoch, _totalGons);
+      return _totalGons;
+    }
+
+    if (supplyAdd > 0) {
+      _totalGons = _totalGons + supplyAdd;
+    } else {
+      _totalGons = _totalGons - supplyRemove;
+    }
+
+    _gonsPerFragment = _totalGons / _totalSupply;
+
+    // From this point forward, _gonsPerFragment is taken as the source of truth.
+    // We recalculate a new _totalSupply to be in agreement with the _gonsPerFragment
+    // conversion rate.
+    // This means our applied Deltas can deviate from the requested Deltas,
+    // but this deviation is guaranteed to be < (_totalSupply^2)/(_totalGons - _totalSupply).
+    //
+    // In the case of _totalSupply <= MAX_UINT128 (our current supply cap), this
+    // deviation is guaranteed to be < 1, so we can omit this step. If the supply cap is
+    // ever increased, it must be re-included.
+    // _totalSupply = _totalGons - _gonsPerFragment
+
+    emit LogRebase(epoch, _totalSupply);
+    return _totalSupply;
+  }
   /**
    * @return The total number of fragments.
    */
@@ -159,10 +194,26 @@ contract UFragments is Initializable, ERC20Detailed {
 
   /**
    * @param who The address to query.
-   * @return The balance of the specified address.
+   * @return The balance of the specified address in fragments
    */
   function balanceOf(address who) external view override returns (uint256) {
     return _gonBalances[who] / _gonsPerFragment;
+  }
+
+  function gooSharePerGon() external view returns (uint256){
+    return internalGooBalance / _totalGons;
+  }
+
+  function gooSharePerFragment() external view returns (uint256){
+    return internalGooBalance / (_totalGons / _gonsPerFragment);
+  }
+
+  function userGooAmount(address who) external view returns (uint256){
+    return (internalGooBalance / (_totalGons / _gonsPerFragment)) * (_gonBalances[who] / _gonsPerFragment);
+  }
+
+  function estUserGooAmount(address who) external view returns (uint256){
+    return ((IGobblers(gobblers).gooBalance(address(gooTogether)) / _totalGons) * _gonBalances[who]);
   }
 
   /**

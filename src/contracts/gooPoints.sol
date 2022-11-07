@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-interface IGooTogether{
-  function calculateInterest() external;
-  function gooPoints() external view returns (address);
-}
-
+import "./IGooTogether.sol";
 interface IGooBalanceProxy{
   function balanceOf(address) external view returns (uint256);
 }
@@ -16,6 +12,8 @@ import "./uFragments.sol";
 
 import "./IERC20.sol";
 
+import "./IGobblers.sol";
+
 /// @title gooPoints token contract
 /// @notice handles all minting/burning of gooPoints
 /// @dev extends UFragments
@@ -24,7 +22,7 @@ contract gooPoints is UFragments, IGooPoints {
 
   /// @notice any function with this modifier will call the pay_interest() function before any function logic is called
   modifier paysInterest() {
-    IGooTogether(gooTogether).calculateInterest();
+    IGooTogether(gooTogether).pay_interest();
     _;
   }
 
@@ -68,9 +66,11 @@ contract gooPoints is UFragments, IGooPoints {
   function mint(uint256 multiPoints, address _user) external override paysInterest {
     require(msg.sender == gooTogether); 
     // see comments in the deposit function for an explaination of this math
-    _gonBalances[_user] = _gonBalances[_user] + multiPoints * _gonsPerFragment;
+    uint256 proportionalGon = ((multiPoints*1e18) / (_totalGons/1e18));
+    _gonBalances[_user] = _gonBalances[_user] + proportionalGon;
+    _totalGons = _totalGons + proportionalGon;
     _totalSupply = _totalSupply + multiPoints;
-    _totalGons = _totalGons + multiPoints * _gonsPerFragment;
+    
     // emit both a mint and transfer event
     emit Mint(_user, multiPoints);
     emit Transfer(address(0), _user, multiPoints);
@@ -81,9 +81,10 @@ contract gooPoints is UFragments, IGooPoints {
     require(multiPoints != 0, "Cannot burn 0");
     require(msg.sender == gooTogether);
     // see comments in the deposit function for an explaination of this math
-    _gonBalances[_user] = _gonBalances[_user] - multiPoints * _gonsPerFragment;
-    _totalSupply = _totalSupply - multiPoints;
-    _totalGons = _totalGons - multiPoints * _gonsPerFragment;
+    _totalGons = _totalGons - _gonBalances[_user];
+    _gonBalances[_user] =  0;
+    _totalSupply = _totalSupply - (multiPoints*1e18);
+    
     // emit both a mint and transfer event
     emit Transfer(_user, address(0), multiPoints);
     emit Burn(_user, multiPoints);
@@ -95,17 +96,29 @@ contract gooPoints is UFragments, IGooPoints {
     _donation(goo);
   }
 
-
-  /// @notice function for distributing the donation to all USDa holders
-  /// @param amount amount of USDa to donate
-  function _donation(uint256 amount) internal {
-    _totalSupply = _totalSupply + amount;
-    if (_totalSupply > MAX_SUPPLY) {
-      _totalSupply = MAX_SUPPLY;
-    }
-    _gonsPerFragment = _totalGons / _totalSupply;
-    emit Donation(msg.sender, amount, _totalSupply);
+  
+  function loss(uint256 goo) external override paysInterest {
+    require(msg.sender == gooTogether);
+    _loss(goo);
   }
+
+
+  /// @notice function donates Goo to the total gon balance
+  /// @param amount amount of Goo to donate
+  function _donation(uint256 amount) internal {
+    IGobblers(IGooTogether(gooTogether).viewGobblers()).removeGoo(0);
+    internalGooBalance += amount;
+    emit Donation(msg.sender, amount, internalGooBalance);
+  }
+
+  
+  function _loss(uint256 amount) internal {
+    IGobblers(IGooTogether(gooTogether).viewGobblers()).removeGoo(0);
+    internalGooBalance -= amount;
+    emit Loss(msg.sender, amount, internalGooBalance);
+  }
+
+
 
   /// @notice get reserve ratio
   /// @return e18_reserve_ratio USDa reserve ratio
